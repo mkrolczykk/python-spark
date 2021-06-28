@@ -5,3 +5,5 @@ target/
 capstone-dataset
 venv
 notes.txt
+spark-warehouse
+result_data
