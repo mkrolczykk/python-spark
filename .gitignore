@@ -1,9 +1,19 @@
+# environment
 .idea/
 *.iml
 target/
-.DS_Store
-capstone-dataset
 venv
-notes.txt
+# Spark
 spark-warehouse
+# local
+capstone-dataset
 result_data
+# Byte-compiled / optimized / DLL files
+__pycache__
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+# other
+notes.txt
+.DS_Store
