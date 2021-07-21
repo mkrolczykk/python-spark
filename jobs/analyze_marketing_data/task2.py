@@ -1,4 +1,3 @@
-""" TASK #2 - Calculate Marketing Campaigns And Channels Statistics """
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 from pyspark.sql.window import Window
@@ -11,6 +10,8 @@ from .sql_queries.MOST_POPULAR_CHANNEL_QUERY import most_popular_channel_query
 from .sql_queries.AGGREGATE_BILLINGS import aggregate_billings
 
 import os
+
+""" TASK #2 - Calculate Marketing Campaigns And Channels Statistics """
 
 TARGET_DATAFRAME_SCHEMA = StructType([
     StructField('purchaseId', StringType(), True),

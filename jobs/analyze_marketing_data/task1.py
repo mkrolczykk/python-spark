@@ -12,6 +12,8 @@ from dependencies.logger import Log4j
 """ sql queries """
 from .sql_queries.CONVERT_ARRAY_OF_MAPS_TO_MAP import convert_array_of_maps_to_map
 
+""" TASK #1 - Build Purchases Attribution Projection """
+
 MOBILE_SCHEMA = StructType([
     StructField('userId', StringType(), True),
     StructField('eventId', StringType(), True),
@@ -81,7 +83,7 @@ def generate_sessions(df):
                     .otherwise(lit(0))) \
         .filter('max>=2 and first=0') \
         .drop(*['rowNum', 'max', 'first']) \
-        .orderBy("userId", "eventTime") \
+        .orderBy("userId", "eventTime")
 
     return result
 
@@ -115,7 +117,7 @@ def aggregate_mobile_data(df):
 def create_target_dataframe_from(df_1, df_2):
     result = df_2 \
         .join(df_1, df_2.purchaseId == df_1.purchases.purchase_id, "inner") \
-        .withColumn("sessionId", monotonically_increasing_id() + 1) \
+        .withColumn("sessionId", (monotonically_increasing_id() + 1).cast(StringType())) \
         .select("purchaseId",
                 "purchaseTime",
                 "billingCost",
@@ -132,7 +134,7 @@ def main(spark: SparkContext, spark_logger: Log4j, spark_config):
     """ get .csv data """
     mobile_app_data = spark.read.csv(MOBILE_DATA_PATH,
                                      header=True,
-                                     # schema=MOBILE_SCHEMA
+                                     schema=MOBILE_SCHEMA,
                                      sep='\t'
                                      ).alias("mobile_app_data")
 
