@@ -4,8 +4,11 @@ from dependencies import logger
 from os import listdir, path
 import json
 
-def start_spark(app_name='Capstone project 1', master='local[*]',
-                jar_packages=[], files=[], spark_config={}):
+def start_spark(app_name='Capstone project 1',
+                master='local[*]',
+                jar_packages=[],
+                files=[],
+                spark_config={}):
 
     spark = SparkSession \
         .builder \
