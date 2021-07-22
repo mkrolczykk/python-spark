@@ -47,8 +47,10 @@ def calculate_campaigns_revenue(df):
 
     return result
 
+def calculate_campaigns_revenue_sql(spark_context: SparkContext, sql_query=biggest_revenue_query):
+    return spark_context.sql(sql_query)
 
-def calculate_the_most_popular_channel_in_each_campaign(df):
+def channels_engagement_performance(df):
     w3 = Window \
         .partitionBy("campaignId") \
         .orderBy(col("count").desc())
@@ -62,6 +64,8 @@ def calculate_the_most_popular_channel_in_each_campaign(df):
 
     return result
 
+def channels_engagement_performance_sql(spark_context: SparkContext, sql_query=most_popular_channel_query):
+    return spark_context.sql(sql_query)
 
 def main(spark: SparkContext, spark_logger: Log4j, spark_config):
 
@@ -72,15 +76,15 @@ def main(spark: SparkContext, spark_logger: Log4j, spark_config):
     """ SQL version """
 
     target_dataframe.registerTempTable("target_dataframe")
-    biggest_revenue = spark.sql(biggest_revenue_query)
-    mst_popular_channel = spark.sql(most_popular_channel_query)
+    biggest_revenue = calculate_campaigns_revenue_sql(spark_context=spark)
+    mst_popular_channel = channels_engagement_performance_sql(spark_context=spark)
 
     """ END of SQL version """
 
     """ dataframe API version """
     '''
     biggest_revenue = calculate_campaigns_revenue(target_dataframe)
-    mst_popular_channel = calculate_the_most_popular_channel_in_each_campaign(target_dataframe)
+    mst_popular_channel = channels_engagement_performance(target_dataframe)
     '''
     """ END of dataframe API version  """
 

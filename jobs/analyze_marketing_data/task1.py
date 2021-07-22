@@ -67,21 +67,20 @@ def generate_structured_mobile_data(source_df):
 
     return result
 
-
 def generate_sessions(df):
     w5 = Window.orderBy("userId", "eventTime")
-    w6 = Window.partitionBy("session_id").orderBy("userId", "eventTime")
-    w7 = Window.partitionBy("session_id")
+    w6 = Window.partitionBy("sessionId").orderBy("userId", "eventTime")
+    w7 = Window.partitionBy("sessionId")
 
     result = df \
-        .withColumn("session_id", sum(when((col("eventType") == EventType.APP_OPEN.value), lit(1))
+        .withColumn("sessionId", sum(when((col("eventType") == EventType.APP_OPEN.value), lit(1))
                                       .otherwise(lit(0))).over(w5)) \
         .withColumn("rowNum", row_number().over(w6)) \
         .withColumn("max", max("rowNum").over(w7)) \
         .withColumn("first", when((col("rowNum") == 1) & (
         (col("eventType") == EventType.APP_CLOSE.value)), lit(1))
                     .otherwise(lit(0))) \
-        .filter('max>=2 and first=0') \
+        .filter('max>=2 and first=0 and sessionId!=0') \
         .drop(*['rowNum', 'max', 'first']) \
         .orderBy("userId", "eventTime")
 
@@ -89,12 +88,14 @@ def generate_sessions(df):
 
 def aggregate_mobile_data(df):
     work_df = df \
-        .groupBy("userId", "session_id") \
-        .agg(collect_list("eventType").alias("sessionId"),
+        .groupBy("userId", "sessionId") \
+        .agg(collect_list("eventType").alias("session_eventTypes"),
              collect_list("attributes").alias("temp")) \
         .withColumn("length", size(col("temp"))) \
         .withColumn("campaign", slice("temp", start=1, length=2)) \
+        .withColumn("sessionId", df["sessionId"].cast(StringType())) \
         .select("userId",
+                "session_eventTypes",
                 "sessionId",
                 "temp")
 
@@ -108,6 +109,7 @@ def aggregate_mobile_data(df):
 
     result = temp_df2 \
         .select("userId",
+                "session_eventTypes",
                 "sessionId",
                 expr(convert_array_of_maps_to_map).alias("campaign"),
                 explode(temp_df2.channel_id).alias("purchases"))
@@ -115,9 +117,9 @@ def aggregate_mobile_data(df):
     return result
 
 def create_target_dataframe_from(df_1, df_2):
+
     result = df_2 \
         .join(df_1, df_2.purchaseId == df_1.purchases.purchase_id, "inner") \
-        .withColumn("sessionId", (monotonically_increasing_id() + 1).cast(StringType())) \
         .select("purchaseId",
                 "purchaseTime",
                 "billingCost",

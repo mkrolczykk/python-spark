@@ -72,9 +72,11 @@ class TestTask1(unittest.TestCase):
     def test_generate_structured_mobile_data_no_data(self):
         # given
         df = self.spark.createDataFrame(data=[], schema=MOBILE_SCHEMA)
+
         # when
         result = generate_structured_mobile_data(df)
         mvv_array = [int(row.mvv) for row in result.collect()]
+
         # then
         self.assertListEqual([], mvv_array)
 
@@ -88,6 +90,24 @@ class TestTask1(unittest.TestCase):
         # then
         self.assertEqual(expected_rows_number, result)
 
+    """ check generate_structured_mobile_data generated data completeness """
+    def test_generate_structured_mobile_data_completeness(self):
+        # given
+        expected_rows_number = 46
+        expected_attributes_number = 20
+        expected_empty_attributes_number = 26
+
+        # when
+        result = generate_structured_mobile_data(self.mobile_app_data)
+        number_of_rows = result.count()
+        non_empty_attributes = result.filter(result['attributes'].isNotNull()).count()
+        empty_attributes = result.filter(result['attributes'].isNull()).count()
+
+        # then
+        self.assertEqual(expected_rows_number, number_of_rows)
+        self.assertEqual(expected_attributes_number, non_empty_attributes)
+        self.assertEqual(expected_empty_attributes_number, empty_attributes)
+
     """ check the number of generated sessions with correct organized data """
     def test_generate_sessions_with_organized_data(self):
         # given
@@ -96,7 +116,7 @@ class TestTask1(unittest.TestCase):
 
         # when
         result = generate_sessions(df)\
-            .select("session_id")\
+            .select("sessionId")\
             .distinct()\
             .count()
 
@@ -134,8 +154,55 @@ class TestTask1(unittest.TestCase):
 
         # when
         result = generate_sessions(df)\
-            .select("session_id")\
+            .select("sessionId")\
             .distinct()\
+            .count()
+
+        # then
+        self.assertEqual(expected_generated_sessions, result)
+
+    """ check the number of generated sessions with no given data """
+    def test_generate_sessions_with_empty_data(self):
+        # given
+        expected_generated_sessions = 0
+        df = self.spark.createDataFrame(data=[], schema=MOBILE_SCHEMA)
+
+        # when
+        result = generate_sessions(df)\
+            .select("sessionId")\
+            .distinct() \
+            .count()
+
+        # then
+        self.assertEqual(expected_generated_sessions, result)
+
+    """ check the number of generated sessions when session doesn't start from 'app_open' """
+    def test_generate_sessions_with_session_data_not_started_from_app_open(self):
+        # given
+        expected_generated_sessions = 0
+        sample_data = self.spark.createDataFrame(
+            [[1, 'u1_e3', 'search_product', '2020-01-01 12:31:30.000', None],
+             [1, 'u1_e4', 'view_product_details', '2020-01-01 12:32:00.000', None],
+             [1, 'u1_e5', 'purchase', '2020-01-01 12:33:00.000', '{{"purchase_id": "p1"}}'],
+             [1, 'u1_e5', 'app_close', '2020-01-01 12:35:00.000', None],
+             [2, 'u2_e3', 'purchase', '2021-01-01 12:39:00.000', '{{"purchase_id": "p2"}}'],
+             [2, 'u2_e2', 'search_product', '2021-01-01 12:41:00.000', None],
+             [2, 'u2_e3', 'purchase', '2021-01-01 12:42:00.000', '{{"purchase_id": "p3"}}'],
+             [2, 'u2_e4', 'app_close', '2021-01-01 12:49:00.000', None],
+             [3, 'u3_e3', 'view_product_details', '2020-01-01 15:32:00.000', None],
+             [3, 'u3_e4', 'purchase', '2020-01-01 15:33:00.000', '{{"purchase_id": "p1"}}'],
+             [3, 'u3_e4', 'purchase', '2020-01-01 15:34:00.000', '{{"purchase_id": "p4"}}'],
+             [3, 'u3_e4', 'purchase', '2020-01-01 15:35:00.000', '{{"purchase_id": "p5"}}'],
+             [3, 'u3_e5', 'app_close', '2020-01-01 15:39:00.000', None],
+             ],
+            ['userId', 'eventId', 'eventType', 'eventTime', 'attributes']
+        )
+        df = generate_structured_mobile_data(sample_data)
+
+        # when
+        result = generate_sessions(df)\
+            .select("sessionId")\
+            .distinct() \
             .count()
 
         # then
@@ -145,7 +212,7 @@ class TestTask1(unittest.TestCase):
     def test_generate_sessions_check_columns(self):
         # given
         expected_number = 6
-        expected_columns = ['userId', 'eventId', 'eventType', 'eventTime', 'attributes', 'session_id']
+        expected_columns = ['userId', 'eventId', 'eventType', 'eventTime', 'attributes', 'sessionId']
         df = generate_structured_mobile_data(self.mobile_app_data)
 
         # when
@@ -159,8 +226,8 @@ class TestTask1(unittest.TestCase):
     """ check aggregate_mobile_data return dataframe columns correctness """
     def test_aggregate_mobile_data_check_columns(self):
         # given
-        expected_number = 4
-        expected_columns = ['userId', 'sessionId', 'campaign', 'purchases']
+        expected_number = 5
+        expected_columns = ['userId', 'session_eventTypes', 'sessionId', 'campaign', 'purchases']
         df = generate_sessions(generate_structured_mobile_data(self.mobile_app_data))
 
         # when
@@ -192,7 +259,7 @@ class TestTask1(unittest.TestCase):
             StructField('purchaseTime', TimestampType(), True),
             StructField('billingCost', DoubleType(), True),
             StructField('isConfirmed', BooleanType(), True),
-            StructField('sessionId', StringType(), False),
+            StructField('sessionId', StringType(), True),
             StructField('campaignId', StringType(), True),
             StructField('channelIid', StringType(), True)]
         )

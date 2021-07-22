@@ -1,40 +1,40 @@
-userId	eventId	eventType eventTime	attributes
+userId	eventId	eventType	eventTime	attributes
 u1	u1_e1	app_open	2019-01-01 0:00:00	{{"campaign_id": "cmp1",  "channel_id": "Google Ads"}}
-u1	u1_e2	search_product	2019-01-01 0:00:05
-u1	u1_e3	search_product	2019-01-01 0:00:10
-u1	u1_e4	search_product	2019-01-01 0:00:15
-u1	u1_e5	view_product_details	2019-01-01 0:00:20
+u1	u1_e2	search_product	2019-01-01 0:00:05	
+u1	u1_e3	search_product	2019-01-01 0:00:10	
+u1	u1_e4	search_product	2019-01-01 0:00:15	
+u1	u1_e5	view_product_details	2019-01-01 0:00:20	
 u1	u1_e6	purchase	2019-01-01 0:01:00	{{"purchase_id": "p1"}}
-u1	u1_e7	app_close	2019-01-01 0:02:00
+u1	u1_e7	app_close	2019-01-01 0:02:00	
 u2	u2_e1	app_open	2019-01-01 0:00:00	{{"campaign_id": "cmp1",  "channel_id": "Yandex Ads"}}
-u2	u2_e2	search_product	2019-01-01 0:00:03
-u2	u2_e3	view_product_details	2019-01-01 0:01:00
+u2	u2_e2	search_product	2019-01-01 0:00:03	
+u2	u2_e3	view_product_details	2019-01-01 0:01:00	
 u2	u2_e4	purchase	2019-01-01 0:03:00	{{"purchase_id": "p2"}}
-u2	u2_e5	app_close	2019-01-01 0:04:00
+u2	u2_e5	app_close	2019-01-01 0:04:00	
 u2	u2_e6	app_open	2019-01-02 0:00:00	{{"campaign_id": "cmp2",  "channel_id": "Yandex Ads"}}
-u2	u2_e7	search_product	2019-01-02 0:00:03
-u2	u2_e8	view_product_details	2019-01-02 0:01:00
-u2	u2_e10	app_close	2019-01-02 0:04:00
+u2	u2_e7	search_product	2019-01-02 0:00:03	
+u2	u2_e8	view_product_details	2019-01-02 0:01:00	
+u2	u2_e10	app_close	2019-01-02 0:04:00	
 u3	u3_e1	app_open	2019-01-01 0:00:00	{{"campaign_id": "cmp2",  "channel_id": "Facebook Ads"}}
-u3	u3_e2	search_product	2019-01-01 0:00:10
-u3	u3_e3	view_product_details	2019-01-01 0:00:30
-u3	u3_e4	app_close	2019-01-01 0:02:00
+u3	u3_e2	search_product	2019-01-01 0:00:10	
+u3	u3_e3	view_product_details	2019-01-01 0:00:30	
+u3	u3_e4	app_close	2019-01-01 0:02:00	
 u3	u3_e5	app_open	2019-01-01 1:11:11	{{"campaign_id": "cmp1",  "channel_id": "Google Ads"}}
-u3	u3_e6	search_product	2019-01-01 1:11:20
-u3	u3_e7	view_product_details	2019-01-01 1:11:40
+u3	u3_e6	search_product	2019-01-01 1:11:20	
+u3	u3_e7	view_product_details	2019-01-01 1:11:40	
 u3	u3_e8	purchase	2019-01-01 1:12:00	{{"purchase_id": "p3"}}
-u3	u3_e9	app_close	2019-01-01 1:12:30
+u3	u3_e9	app_close	2019-01-01 1:12:30	
 u3	u3_e10	app_open	2019-01-02 2:00:00	{{"campaign_id": "cmp2",  "channel_id": "Yandex Ads"}}
-u3	u3_e11	search_product	2019-01-02 2:00:06
-u3	u3_e12	search_product	2019-01-02 2:00:20
-u3	u3_e13	view_product_details	2019-01-02 2:11:15
+u3	u3_e11	search_product	2019-01-02 2:00:06	
+u3	u3_e12	search_product	2019-01-02 2:00:20	
+u3	u3_e13	view_product_details	2019-01-02 2:11:15	
 u3	u3_e14	purchase	2019-01-02 2:13:00	{{"purchase_id": "p4"}}
-u3	u3_e15	search_product	2019-01-02 2:14:00
-u3	u3_e16	view_product_details	2019-01-02 2:14:15
+u3	u3_e15	search_product	2019-01-02 2:14:00	
+u3	u3_e16	view_product_details	2019-01-02 2:14:15	
 u3	u3_e17	purchase	2019-01-02 2:15:00	{{"purchase_id": "p5"}}
-u3	u3_e18	app_close	2019-01-02 2:15:40
+u3	u3_e18	app_close	2019-01-02 2:15:40	
 u3	u3_e19	app_open	2019-01-02 13:00:10	{{"campaign_id": "cmp2",  "channel_id": "Yandex Ads"}}
-u3	u3_e20	search_product	2019-01-02 13:00:25
-u3	u3_e21	view_product_details	2019-01-02 13:01:20
+u3	u3_e20	search_product	2019-01-02 13:00:25	
+u3	u3_e21	view_product_details	2019-01-02 13:01:20	
 u3	u3_e22	purchase	2019-01-02 13:03:00	{{"purchase_id": “p6"}}
-u3	u3_e23	app_close	2019-01-02 13:06:00
+u3	u3_e23	app_close	2019-01-02 13:06:00	
