@@ -1,9 +1,10 @@
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType, MapType, DoubleType, BooleanType
-from pyspark import Row
 from dependencies.spark import start_spark
 
 import unittest
-from chispa.dataframe_comparer import assert_schema_equality
+from chispa.dataframe_comparer import assert_schema_equality, assert_df_equality
+
+import datetime
 
 from jobs.analyze_marketing_data.task1 import (
     MOBILE_SCHEMA,
@@ -35,6 +36,16 @@ class TestTask1(unittest.TestCase):
                                                   schema=USER_SCHEMA,
                                                   sep='\t'
                                                   ).alias("purchases_data")
+
+        self.TARGET_DATAFRAME_SCHEMA = StructType([
+            StructField('purchaseId', StringType(), True),
+            StructField('purchaseTime', TimestampType(), True),
+            StructField('billingCost', DoubleType(), True),
+            StructField('isConfirmed', BooleanType(), True),
+            StructField('sessionId', StringType(), True),
+            StructField('campaignId', StringType(), True),
+            StructField('channelIid', StringType(), True)
+        ])
 
     """ check if generated mobile data structure is correct """
     def test_generate_structured_mobile_data_struct(self):
@@ -254,15 +265,7 @@ class TestTask1(unittest.TestCase):
     """ check if generated target dataframe structure is correct """
     def test_create_target_dataframe_schema(self):
         # given
-        expected_structure = StructType([
-            StructField('purchaseId', StringType(), True),
-            StructField('purchaseTime', TimestampType(), True),
-            StructField('billingCost', DoubleType(), True),
-            StructField('isConfirmed', BooleanType(), True),
-            StructField('sessionId', StringType(), True),
-            StructField('campaignId', StringType(), True),
-            StructField('channelIid', StringType(), True)]
-        )
+        expected_structure = self.TARGET_DATAFRAME_SCHEMA
         expected_df_structure = self.spark.createDataFrame(data=[], schema=expected_structure)
         df = aggregate_mobile_data(generate_sessions(generate_structured_mobile_data(self.mobile_app_data)))
 
@@ -303,21 +306,22 @@ class TestTask1(unittest.TestCase):
     """ check create_target_dataframe generated data correctness """
     def test_create_target_dataframe_data_correctness(self):
         # given
-        expected_target_df = [
-            Row(purchaseId='p1', purchaseTime='2019-01-01 00:01:05', billingCost=100.5, isConfirmed=True, sessionId='1', campaignId='cmp1', channelIid='GoogleAds'),
-            Row(purchaseId='p2', purchaseTime='2019-01-01 00:03:10', billingCost=200.0, isConfirmed=True, sessionId='2', campaignId='cmp1', channelIid='YandexAds'),
-            Row(purchaseId='p3', purchaseTime='2019-01-01 01:12:15', billingCost=300.0, isConfirmed=False, sessionId='3', campaignId='cmp1', channelIid='GoogleAds'),
-            Row(purchaseId='p4', purchaseTime='2019-01-01 02:13:05', billingCost=50.2, isConfirmed=True, sessionId='4', campaignId='cmp2', channelIid='YandexAds'),
-            Row(purchaseId='p5', purchaseTime='2019-01-01 02:15:05', billingCost=75.0, isConfirmed=True, sessionId='5', campaignId='cmp2', channelIid='YandexAds'),
-            Row(purchaseId='p6', purchaseTime='2019-01-02 13:03:00', billingCost=99.0, isConfirmed=False, sessionId='6', campaignId='cmp2', channelIid='YandexAds')
-        ]
+        expected_df = self.spark.createDataFrame(
+            [['p1', datetime.datetime(2019, 1, 1, 0, 1, 5), 100.5, True, '2', 'cmp1', 'GoogleAds'],
+             ['p2', datetime.datetime(2019, 1, 1, 0, 3, 10), 200.0, True, '4', 'cmp1', 'YandexAds'],
+             ['p3', datetime.datetime(2019, 1, 1, 1, 12, 15), 300.0, False, '10', 'cmp1', 'GoogleAds'],
+             ['p4', datetime.datetime(2019, 1, 1, 2, 13, 5), 50.2, True, '12', 'cmp2', 'YandexAds'],
+             ['p5', datetime.datetime(2019, 1, 1, 2, 15, 5), 75.0, True, '12', 'cmp2', 'YandexAds'],
+             ['p6', datetime.datetime(2019, 1, 2, 13, 3, 0), 99.0, False, '14', 'cmp2', 'YandexAds'],
+             ],
+            schema=self.TARGET_DATAFRAME_SCHEMA)
         df = aggregate_mobile_data(generate_sessions(generate_structured_mobile_data(self.mobile_app_data)))
 
         # when
-        result = create_target_dataframe_from(df, self.purchases_data).collect()
+        result = create_target_dataframe_from(df, self.purchases_data)
 
         # then
-        self.assertTrue([col in expected_target_df for col in result])
+        assert_df_equality(expected_df, result)
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestTask1)

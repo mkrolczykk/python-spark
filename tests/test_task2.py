@@ -1,7 +1,10 @@
-from pyspark import Row
+from pyspark.sql.types import StructType, StructField, StringType, TimestampType, DoubleType, BooleanType, LongType
 from dependencies.spark import start_spark
 
 import unittest
+from chispa.dataframe_comparer import assert_df_equality
+
+import datetime
 
 from jobs.analyze_marketing_data.task2 import (
     calculate_campaigns_revenue,
@@ -16,24 +19,44 @@ class TestTask2(unittest.TestCase):
             app_name='Capstone project 1',
             files=['../configs/config.json']
         )
-        self.target_dataframe = self.spark.createDataFrame(data=[
-            Row(purchaseId='p1', purchaseTime='2019-01-01 00:01:05', billingCost=100.5, isConfirmed=True, sessionId='1', campaignId='cmp1', channelIid='GoogleAds'),
-            Row(purchaseId='p2', purchaseTime='2019-01-01 00:03:10', billingCost=200.0, isConfirmed=True, sessionId='2', campaignId='cmp1', channelIid='YandexAds'),
-            Row(purchaseId='p3', purchaseTime='2019-01-01 01:12:15', billingCost=300.0, isConfirmed=False, sessionId='3', campaignId='cmp1', channelIid='GoogleAds'),
-            Row(purchaseId='p4', purchaseTime='2019-01-01 02:13:05', billingCost=50.2, isConfirmed=True, sessionId='4', campaignId='cmp2', channelIid='YandexAds'),
-            Row(purchaseId='p5', purchaseTime='2019-01-01 02:15:05', billingCost=75.0, isConfirmed=True, sessionId='5', campaignId='cmp2', channelIid='YandexAds'),
-            Row(purchaseId='p6', purchaseTime='2019-01-02 13:03:00', billingCost=99.0, isConfirmed=False, sessionId='6', campaignId='cmp2', channelIid='YandexAds')
-        ])
 
-        self.expected_biggest_revenue_result = [
-            Row(campaignId='cmp1', revenue=300.5),
-            Row(campaignId='cmp2', revenue=125.2)
-        ]
+        self.target_dataframe = self.spark.createDataFrame(
+            [['p1', datetime.datetime(2019, 1, 1, 0, 1, 5), 100.5, True, '2', 'cmp1', 'GoogleAds'],
+             ['p2', datetime.datetime(2019, 1, 1, 0, 3, 10), 200.0, True, '4', 'cmp1', 'YandexAds'],
+             ['p3', datetime.datetime(2019, 1, 1, 1, 12, 15), 300.0, False, '10', 'cmp1', 'GoogleAds'],
+             ['p4', datetime.datetime(2019, 1, 1, 2, 13, 5), 50.2, True, '12', 'cmp2', 'YandexAds'],
+             ['p5', datetime.datetime(2019, 1, 1, 2, 15, 5), 75.0, True, '12', 'cmp2', 'YandexAds'],
+             ['p6', datetime.datetime(2019, 1, 2, 13, 3, 0), 99.0, False, '14', 'cmp2', 'YandexAds'],
+             ],
+            schema=StructType([
+            StructField('purchaseId', StringType(), True),
+            StructField('purchaseTime', TimestampType(), True),
+            StructField('billingCost', DoubleType(), True),
+            StructField('isConfirmed', BooleanType(), True),
+            StructField('sessionId', StringType(), True),
+            StructField('campaignId', StringType(), True),
+            StructField('channelIid', StringType(), True)
+            ])
+        )
 
-        self.expected_channel_engagement_performance = [
-            Row(campaignId='cmp2', channelIid='YandexAds', unique_sessions='3'),
-            Row(campaignId='cmp1', channelIid='GoogleAds', unique_sessions='2')
-        ]
+        self.expected_biggest_revenue_result = self.spark.createDataFrame(
+            [['cmp1', 300.5],
+             ['cmp2', 125.2]],
+            schema=StructType([
+                StructField('campaignId', StringType(), True),
+                StructField('revenue', DoubleType(), True),
+            ])
+        )
+
+        self.expected_channel_engagement_performance = self.spark.createDataFrame(
+            [['cmp2', 'YandexAds', 3],
+             ['cmp1', 'GoogleAds', 2]],
+            schema=StructType([
+            StructField('campaignId', StringType(), True),
+            StructField('channelIid', StringType(), True),
+            StructField('unique_sessions', LongType(), False),
+            ])
+        )
 
     """ check calculate_campaigns_revenue generated result correctness """
     def test_calculate_campaigns_revenue_result_correctness(self):
@@ -41,10 +64,10 @@ class TestTask2(unittest.TestCase):
         expected_biggest_revenue_result = self.expected_biggest_revenue_result
 
         # when
-        result = calculate_campaigns_revenue(self.target_dataframe).collect()
+        result = calculate_campaigns_revenue(self.target_dataframe)
 
         # then
-        self.assertTrue([col in expected_biggest_revenue_result for col in result])
+        assert_df_equality(expected_biggest_revenue_result, result)
 
     """ check calculate_campaigns_revenue SQL version generated result correctness """
     def test_calculate_campaigns_revenue_sql_result_correctness(self):
@@ -53,10 +76,10 @@ class TestTask2(unittest.TestCase):
 
         # when
         self.target_dataframe.registerTempTable("target_dataframe")
-        result = calculate_campaigns_revenue_sql(spark_context=self.spark).collect()
+        result = calculate_campaigns_revenue_sql(spark_context=self.spark)
 
         # then
-        self.assertTrue([col in expected_biggest_revenue_result for col in result])
+        assert_df_equality(expected_biggest_revenue_result, result)
 
     """ check calculate_campaigns_revenue returns no more than top 10 campaigns """
     def test_calculate_campaigns_revenue_returns_max_10_rows(self):
@@ -100,21 +123,21 @@ class TestTask2(unittest.TestCase):
         expected_channel_engagement_performance = self.expected_channel_engagement_performance
 
         # when
-        result = channels_engagement_performance(self.target_dataframe).collect()
+        result = channels_engagement_performance(self.target_dataframe)
 
         # then
-        self.assertTrue([col in expected_channel_engagement_performance for col in result])
+        assert_df_equality(expected_channel_engagement_performance, result)
 
     """ check channels_engagement_performance SQL version generated result correctness """
-    def test_channels_engagement_performance_result_correctness(self):
+    def test_channels_engagement_performance_result_sql_correctness(self):
         # given
         expected_channel_engagement_performance = self.expected_channel_engagement_performance
 
         # when
-        result = channels_engagement_performance_sql(spark_context=self.spark).collect()
+        result = channels_engagement_performance_sql(spark_context=self.spark)
 
         # then
-        self.assertTrue([col in expected_channel_engagement_performance for col in result])
+        assert_df_equality(expected_channel_engagement_performance, result)
 
     """ check the behaviour of channels_engagement_performance while processing no data """
     def test_channels_engagement_performance_with_no_data(self):
