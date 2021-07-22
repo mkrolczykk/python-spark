@@ -14,13 +14,14 @@ from jobs.analyze_marketing_data.task2 import (
 )
 
 class TestTask2(unittest.TestCase):
-    def setUp(self):
-        self.spark, self.spark_logger, self.spark_config = start_spark(
+    @classmethod
+    def setUpClass(cls):
+        cls.spark, cls.spark_logger, cls.spark_config = start_spark(
             app_name='Capstone project 1',
             files=['../configs/config.json']
         )
 
-        self.target_dataframe = self.spark.createDataFrame(
+        cls.target_dataframe = cls.spark.createDataFrame(
             [['p1', datetime.datetime(2019, 1, 1, 0, 1, 5), 100.5, True, '2', 'cmp1', 'GoogleAds'],
              ['p2', datetime.datetime(2019, 1, 1, 0, 3, 10), 200.0, True, '4', 'cmp1', 'YandexAds'],
              ['p3', datetime.datetime(2019, 1, 1, 1, 12, 15), 300.0, False, '10', 'cmp1', 'GoogleAds'],
@@ -39,7 +40,7 @@ class TestTask2(unittest.TestCase):
             ])
         )
 
-        self.expected_biggest_revenue_result = self.spark.createDataFrame(
+        cls.expected_biggest_revenue_result = cls.spark.createDataFrame(
             [['cmp1', 300.5],
              ['cmp2', 125.2]],
             schema=StructType([
@@ -48,7 +49,7 @@ class TestTask2(unittest.TestCase):
             ])
         )
 
-        self.expected_channel_engagement_performance = self.spark.createDataFrame(
+        cls.expected_channel_engagement_performance = cls.spark.createDataFrame(
             [['cmp2', 'YandexAds', 3],
              ['cmp1', 'GoogleAds', 2]],
             schema=StructType([
@@ -57,6 +58,10 @@ class TestTask2(unittest.TestCase):
             StructField('unique_sessions', LongType(), False),
             ])
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.spark.stop()
 
     """ check calculate_campaigns_revenue generated result correctness """
     def test_calculate_campaigns_revenue_result_correctness(self):

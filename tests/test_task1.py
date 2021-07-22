@@ -18,26 +18,28 @@ from jobs.analyze_marketing_data.task1 import (
 TEST_MOBILE_DATA_PATH = 'test_data/mobile-app-clickstream_sample.tsv'
 TEST_PURCHASES_DATA_PATH = 'test_data/purchases_sample.tsv'
 
+
 class TestTask1(unittest.TestCase):
-    def setUp(self):
-        self.spark, self.spark_logger, self.spark_config = start_spark(
+    @classmethod
+    def setUpClass(cls):
+        cls.spark, cls.spark_logger, cls.spark_config = start_spark(
             app_name='Capstone project 1',
             files=['../configs/config.json']
         )
 
-        self.mobile_app_data = self.spark.read.csv(TEST_MOBILE_DATA_PATH,
-                                                   header=True,
-                                                   schema=MOBILE_SCHEMA,
-                                                   sep='\t'
-                                                   ).alias("mobile_app_data")
+        cls.mobile_app_data = cls.spark.read.csv(TEST_MOBILE_DATA_PATH,
+                                                 header=True,
+                                                 schema=MOBILE_SCHEMA,
+                                                 sep='\t'
+                                                 ).alias("mobile_app_data")
 
-        self.purchases_data = self.spark.read.csv(TEST_PURCHASES_DATA_PATH,
-                                                  header=True,
-                                                  schema=USER_SCHEMA,
-                                                  sep='\t'
-                                                  ).alias("purchases_data")
+        cls.purchases_data = cls.spark.read.csv(TEST_PURCHASES_DATA_PATH,
+                                                header=True,
+                                                schema=USER_SCHEMA,
+                                                sep='\t'
+                                                ).alias("purchases_data")
 
-        self.TARGET_DATAFRAME_SCHEMA = StructType([
+        cls.TARGET_DATAFRAME_SCHEMA = StructType([
             StructField('purchaseId', StringType(), True),
             StructField('purchaseTime', TimestampType(), True),
             StructField('billingCost', DoubleType(), True),
@@ -46,6 +48,10 @@ class TestTask1(unittest.TestCase):
             StructField('campaignId', StringType(), True),
             StructField('channelIid', StringType(), True)
         ])
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.spark.stop()
 
     """ check if generated mobile data structure is correct """
     def test_generate_structured_mobile_data_struct(self):
@@ -94,7 +100,7 @@ class TestTask1(unittest.TestCase):
     """ check the behaviour of generate_structured_mobile_data with given data """
     def test_generate_structured_mobile_data_with_data(self):
         # given
-        expected_rows_number = 46   # expected number of rows after process data and explode 'attributes' column
+        expected_rows_number = 46  # expected number of rows after process data and explode 'attributes' column
         # when
         result = generate_structured_mobile_data(self.mobile_app_data).count()
 
@@ -122,13 +128,13 @@ class TestTask1(unittest.TestCase):
     """ check the number of generated sessions with correct organized data """
     def test_generate_sessions_with_organized_data(self):
         # given
-        expected_generated_sessions = 7   # expected number of sessions (session starts with app_open event and finishes with app_close)
+        expected_generated_sessions = 7  # expected number of sessions (session starts with app_open event and finishes with app_close)
         df = generate_structured_mobile_data(self.mobile_app_data)
 
         # when
-        result = generate_sessions(df)\
-            .select("sessionId")\
-            .distinct()\
+        result = generate_sessions(df) \
+            .select("sessionId") \
+            .distinct() \
             .count()
 
         # then
@@ -140,18 +146,21 @@ class TestTask1(unittest.TestCase):
         expected_generated_sessions = 3
         sample_data = self.spark.createDataFrame(
             [[4, 'u1_e1', 'search_product', '2020-01-01 10:33:00.000', None],
-             [1, 'u1_e2', 'app_open', '2020-01-01 12:31:00.000', '{{"campaign_id": "cmp1",  "channel_id": "Google Ads"}}'],
+             [1, 'u1_e2', 'app_open', '2020-01-01 12:31:00.000',
+              '{{"campaign_id": "cmp1",  "channel_id": "Google Ads"}}'],
              [1, 'u1_e3', 'search_product', '2020-01-01 12:31:30.000', None],
              [1, 'u1_e4', 'view_product_details', '2020-01-01 12:32:00.000', None],
              [1, 'u1_e5', 'purchase', '2020-01-01 12:33:00.000', '{{"purchase_id": "p1"}}'],
              [1, 'u1_e5', 'app_close', '2020-01-01 12:35:00.000', None],
-             [2, 'u2_e1', 'app_open', '2021-01-01 12:35:00.000', '{{"campaign_id": "cmp2",  "channel_id": "Google Ads"}}'],
+             [2, 'u2_e1', 'app_open', '2021-01-01 12:35:00.000',
+              '{{"campaign_id": "cmp2",  "channel_id": "Google Ads"}}'],
              [2, 'u2_e2', 'search_product', '2021-01-01 12:36:00.000', None],
              [2, 'u2_e3', 'purchase', '2021-01-01 12:39:00.000', '{{"purchase_id": "p2"}}'],
              [2, 'u2_e2', 'search_product', '2021-01-01 12:41:00.000', None],
              [2, 'u2_e3', 'purchase', '2021-01-01 12:42:00.000', '{{"purchase_id": "p3"}}'],
              [2, 'u2_e4', 'app_close', '2021-01-01 12:49:00.000', None],
-             [3, 'u3_e1', 'app_open', '2020-01-01 15:31:00.000', '{{"campaign_id": "cmp1",  "channel_id": "Google Ads"}}'],
+             [3, 'u3_e1', 'app_open', '2020-01-01 15:31:00.000',
+              '{{"campaign_id": "cmp1",  "channel_id": "Google Ads"}}'],
              [3, 'u3_e2', 'search_product', '2020-01-01 15:31:30.000', None],
              [3, 'u3_e3', 'view_product_details', '2020-01-01 15:32:00.000', None],
              [3, 'u3_e4', 'purchase', '2020-01-01 15:33:00.000', '{{"purchase_id": "p1"}}'],
@@ -164,9 +173,9 @@ class TestTask1(unittest.TestCase):
         df = generate_structured_mobile_data(sample_data)
 
         # when
-        result = generate_sessions(df)\
-            .select("sessionId")\
-            .distinct()\
+        result = generate_sessions(df) \
+            .select("sessionId") \
+            .distinct() \
             .count()
 
         # then
@@ -179,8 +188,8 @@ class TestTask1(unittest.TestCase):
         df = self.spark.createDataFrame(data=[], schema=MOBILE_SCHEMA)
 
         # when
-        result = generate_sessions(df)\
-            .select("sessionId")\
+        result = generate_sessions(df) \
+            .select("sessionId") \
             .distinct() \
             .count()
 
@@ -211,8 +220,8 @@ class TestTask1(unittest.TestCase):
         df = generate_structured_mobile_data(sample_data)
 
         # when
-        result = generate_sessions(df)\
-            .select("sessionId")\
+        result = generate_sessions(df) \
+            .select("sessionId") \
             .distinct() \
             .count()
 
@@ -279,7 +288,8 @@ class TestTask1(unittest.TestCase):
     def test_create_target_dataframe_check_columns(self):
         # given
         expected_number = 7
-        expected_columns = ['purchaseId', 'purchaseTime', 'billingCost', 'isConfirmed', 'sessionId', 'campaignId', 'channelIid']
+        expected_columns = ['purchaseId', 'purchaseTime', 'billingCost', 'isConfirmed', 'sessionId', 'campaignId',
+                            'channelIid']
         df = aggregate_mobile_data(generate_sessions(generate_structured_mobile_data(self.mobile_app_data)))
 
         # when

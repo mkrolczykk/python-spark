@@ -61,12 +61,12 @@ def channels_engagement_performance(df):
         .withColumn("row", row_number().over(w3)) \
         .filter(col("row") == 1).drop("row") \
         .withColumnRenamed("count", "unique_sessions")
-    # result.schema['unique_sessions'].nullable = True
+
     return result
 
 def channels_engagement_performance_sql(spark_context: SparkContext, sql_query=most_popular_channel_query):
     result = spark_context.sql(sql_query)
-    # result.schema['unique_sessions'].nullable = True
+
     return result
 
 def main(spark: SparkContext, spark_logger: Log4j, spark_config):
@@ -99,5 +99,3 @@ def main(spark: SparkContext, spark_logger: Log4j, spark_config):
     target_dataframe.write.parquet(MST_POPULAR_CHANNEL_OUTPUT, mode='overwrite')
 
 
-if __name__ == '__main__':
-    main()
