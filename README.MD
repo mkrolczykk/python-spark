@@ -168,9 +168,14 @@ the datasets
 (ENV_NAME)$ pip3 install -r ./requirements.txt
 ```
 
-5. Check if everything works, by running main script
+5. Check if everything works by running unit tests
 ```
-(ENV_NAME)$ python3 ./jobs/main.py
+(ENV_NAME)$ python3 -m tests.test_task1
+(ENV_NAME)$ python3 -m tests.test_task2
+```
+5. Run main script
+```
+(ENV_NAME)$ python3 -m jobs.main
 ```
 The app should be ready to use.
 

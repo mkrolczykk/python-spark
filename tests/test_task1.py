@@ -1,3 +1,5 @@
+import os
+
 from pyspark.sql import Window
 from pyspark.sql.functions import monotonically_increasing_id, col, sum
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType, MapType, DoubleType, BooleanType
@@ -21,16 +23,16 @@ from jobs.analyze_marketing_data.task1 import (
     create_target_dataframe_udf
 )
 
-TEST_MOBILE_DATA_PATH = 'test_data/mobile-app-clickstream_sample.tsv'
-TEST_PURCHASES_DATA_PATH = 'test_data/purchases_sample.tsv'
-
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEST_MOBILE_DATA_PATH = ROOT_DIR + '/tests/test_data/mobile-app-clickstream_sample.tsv'
+TEST_PURCHASES_DATA_PATH = ROOT_DIR + '/tests/test_data/purchases_sample.tsv'
 
 class TestTask1(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.spark, cls.spark_logger, cls.spark_config = start_spark(
             app_name='Capstone project 1',
-            files=['../configs/config.json']
+            files=['{}/configs/config.json'.format(ROOT_DIR)]
         )
 
         cls.mobile_app_data = cls.spark.read.csv(TEST_MOBILE_DATA_PATH,

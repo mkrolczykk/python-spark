@@ -1,6 +1,8 @@
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType, DoubleType, BooleanType, LongType
 from dependencies.spark import start_spark
 
+import os
+
 import unittest
 from chispa.dataframe_comparer import assert_df_equality
 
@@ -13,12 +15,14 @@ from jobs.analyze_marketing_data.task2 import (
     channels_engagement_performance_sql
 )
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 class TestTask2(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.spark, cls.spark_logger, cls.spark_config = start_spark(
             app_name='Capstone project 1',
-            files=['../configs/config.json']
+            files=['{}/configs/config.json'.format(ROOT_DIR)]
         )
 
         cls.target_dataframe = cls.spark.createDataFrame(

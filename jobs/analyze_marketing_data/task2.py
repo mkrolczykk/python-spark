@@ -74,7 +74,7 @@ def main(spark: SparkContext, spark_logger: Log4j, spark_config):
     target_dataframe = spark.read.parquet(TARGET_DATAFRAME_INPUT,
                                           header=True,
                                           schema=TARGET_DATAFRAME_SCHEMA,
-                                          ).alias('target_dataframe')
+                                          ).alias('target_dataframe').cache()
     """ SQL version """
 
     target_dataframe.registerTempTable("target_dataframe")
