@@ -59,10 +59,6 @@ class TestTask2(unittest.TestCase):
             ])
         )
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.spark.stop()
-
     """ check calculate_campaigns_revenue generated result correctness """
     def test_calculate_campaigns_revenue_result_correctness(self):
         # given

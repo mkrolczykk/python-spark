@@ -56,7 +56,7 @@ def generate_structured_mobile_data(source_df):
         .withColumn("key_temp", split(col("attributes"), ":").getItem(0)) \
         .withColumn("key", translate("key_temp", "{} '\"“", "")) \
         .withColumn("value_temp", split(col("attributes"), ":").getItem(1)) \
-        .withColumn("value", translate("value_temp", "{} '\"“", "")) \
+        .withColumn("value", trim(translate("value_temp", "{}'\"“", ""))) \
         .withColumn("attributes", create_map(col("key"), col("value"))) \
         .select(col("eventId"), col("attributes")) \
         .alias('attributes_to_map_struct')
@@ -138,8 +138,8 @@ def create_target_dataframe_from(df_1, df_2):
 @udf(returnType=StringType())
 def prepare_attributes_udf(event_type, attributes):
     attr = str(attributes)
-    if attr.startswith("{{") and attr.endswith("}}"):
-        if (event_type == EventType.PURCHASE.value) or (event_type == EventType.APP_OPEN.value):
+    if (event_type == EventType.PURCHASE.value) or (event_type == EventType.APP_OPEN.value):
+        if attr.startswith("{{") and attr.endswith("}}"):
             attr = attr[1:len(attributes) - 1]
     return attr
 
@@ -157,7 +157,7 @@ def create_target_dataframe_udf(mobile_app_data, purchase_data):
 
     temp_df = (mobile_app_data
                .withColumn('sessionId_temp', generate_sessions_udf(mobile_app_data['eventType'], monotonically_increasing_id() + 1))
-               .withColumn('sessionId', sum(col('sessionId_temp')).over(w1))
+               .withColumn('sessionId', (sum(col('sessionId_temp')).over(w1)).cast(StringType()))
                .withColumn('attr', prepare_attributes_udf(mobile_app_data['eventType'], mobile_app_data['attributes']))
                .withColumn('campaign_id',
                            when(
@@ -212,7 +212,7 @@ def main(spark: SparkContext, spark_logger: Log4j, spark_config):
                                                ).alias("purchases_data")
 
     """ default Spark SQL capabilities version """
-    '''
+
     structured_mobile_data = generate_structured_mobile_data(mobile_app_data)
 
     result = generate_sessions(structured_mobile_data).cache()  # split data into unique sessions (session starts with app_open event and finishes with app_close)
@@ -220,13 +220,13 @@ def main(spark: SparkContext, spark_logger: Log4j, spark_config):
     aggr_data = aggregate_mobile_data(result).cache()
 
     target_dataframe = create_target_dataframe_from(aggr_data, purchases_structured_data)     # target dataframe
-    '''
+
     """ END of Spark SQL capabilities version """
 
     """ UDF version """
-
+    '''
     target_dataframe = create_target_dataframe_udf(mobile_app_data, purchases_structured_data)
-
+    '''
     """ END of UDF version """
 
     """ show result in console """
