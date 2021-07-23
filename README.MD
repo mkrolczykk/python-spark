@@ -118,7 +118,7 @@ Project consists of the following directories: <br />
 * jobs <br />
   This directory consists of spark app created jobs
 * tests <br />
-  Here you can find some spark unit and integration tests
+  Here you can find some spark app tests
   
 ## Technologies and dependencies
 * Python 3.8
