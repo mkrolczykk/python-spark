@@ -8,8 +8,13 @@ def start_spark(app_name='Capstone project 1',
                 master='local[*]',
                 jar_packages=[],
                 files=[],
-                spark_config={}):
+                spark_config=None):
 
+    if spark_config is None:
+        spark_config = {
+            "spark.executor.memory": "2048m",
+            "spark.driver.memory": "2048m",
+        }
     spark = SparkSession \
         .builder \
         .master(master) \

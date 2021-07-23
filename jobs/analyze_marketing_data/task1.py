@@ -32,12 +32,8 @@ USER_SCHEMA = StructType([
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Input
-# MOBILE_DATA_PATH = os.path.join(ROOT_DIR, "capstone-dataset/mobile_app_clickstream/*.csv.gz")
-# PURCHASES_DATA_PATH = os.path.join(ROOT_DIR, "capstone-dataset/user_purchases/*.csv.gz")
-
-# mock
-MOBILE_DATA_PATH = os.path.join(ROOT_DIR, 'tests/test_data/mobile-app-clickstream_sample.tsv')
-PURCHASES_DATA_PATH = os.path.join(ROOT_DIR, 'tests/test_data/purchases_sample.tsv')
+MOBILE_DATA_PATH = os.path.join(ROOT_DIR, "capstone-dataset/mobile_app_clickstream/*.csv.gz")
+PURCHASES_DATA_PATH = os.path.join(ROOT_DIR, "capstone-dataset/user_purchases/*.csv.gz")
 
 # Output
 RESULT_FOLDER = os.path.join(ROOT_DIR, "result_data/")
@@ -202,13 +198,11 @@ def main(spark: SparkContext, spark_logger: Log4j, spark_config):
     mobile_app_data = spark.read.csv(MOBILE_DATA_PATH,
                                      header=True,
                                      schema=MOBILE_SCHEMA,
-                                     sep='\t'
                                      ).alias("mobile_app_data")
 
     purchases_structured_data = spark.read.csv(PURCHASES_DATA_PATH,
                                                header=True,
                                                schema=USER_SCHEMA,
-                                               sep='\t'
                                                ).alias("purchases_data")
 
     """ default Spark SQL capabilities version """
