@@ -168,7 +168,7 @@ the datasets
 (ENV_NAME)$ pip3 install -r ./requirements.txt
 ```
 
-5. Check if everything works by running unit tests
+5. Check if everything works by running tests
 ```
 (ENV_NAME)$ python3 -m tests.test_task1
 (ENV_NAME)$ python3 -m tests.test_task2
