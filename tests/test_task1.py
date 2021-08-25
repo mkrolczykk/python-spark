@@ -247,8 +247,8 @@ class TestTask1(unittest.TestCase):
     """ check aggregate_mobile_data return dataframe columns correctness """
     def test_aggregate_mobile_data_check_columns(self):
         # given
-        expected_number = 5
-        expected_columns = ['userId', 'session_eventTypes', 'sessionId', 'campaign', 'purchases']
+        expected_number = 4
+        expected_columns = ['userId', 'sessionId', 'campaign', 'purchases']
         df = generate_sessions(generate_structured_mobile_data(self.mobile_app_data))
 
         # when
@@ -257,7 +257,7 @@ class TestTask1(unittest.TestCase):
 
         # then
         self.assertEqual(expected_number, len(columns))
-        self.assertCountEqual(expected_columns, columns)
+        self.assertListEqual(expected_columns, columns)
 
     """ check aggregate_mobile_data number of rows with success campaign transactions """
     def test_aggregate_mobile_data_number_of_rows_with_campaign_success(self):

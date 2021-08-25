@@ -1,11 +1,10 @@
-from enum import Enum
-
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 from pyspark.sql.window import Window
 from pyspark.sql.functions import udf
 
 import os
+from enum import Enum
 
 from dependencies.logger import Log4j
 
@@ -57,11 +56,9 @@ def generate_structured_mobile_data(source_df):
         .select(col("eventId"), col("attributes")) \
         .alias('attributes_to_map_struct')
 
-    result = source_df.alias("m") \
+    return source_df.alias("m") \
         .join(attributes_to_map_struct.alias("a"), attributes_to_map_struct.eventId == source_df.eventId, "left") \
         .select("m.userId", "m.eventId", "m.eventType", "m.eventTime", "a.attributes")
-
-    return result
 
 
 def generate_sessions(df):
@@ -69,9 +66,10 @@ def generate_sessions(df):
     w6 = Window.partitionBy("sessionId").orderBy("userId", "eventTime")
     w7 = Window.partitionBy("sessionId")
 
-    result = df \
+    return df \
         .withColumn("sessionId", sum(when((col("eventType") == EventType.APP_OPEN.value), lit(1))
-                                     .otherwise(lit(0))).over(w5)) \
+                                     .otherwise(lit(0))
+                                     ).over(w5)) \
         .withColumn("rowNum", row_number().over(w6)) \
         .withColumn("max", max("rowNum").over(w7)) \
         .withColumn("first", when((col("rowNum") == 1) & (
@@ -81,42 +79,31 @@ def generate_sessions(df):
         .drop(*['rowNum', 'max', 'first']) \
         .orderBy("userId", "eventTime")
 
-    return result
-
 
 def aggregate_mobile_data(df):
     work_df = df \
         .groupBy("userId", "sessionId") \
-        .agg(collect_list("eventType").alias("session_eventTypes"),
-             collect_list("attributes").alias("temp")) \
-        .withColumn("length", size(col("temp"))) \
-        .withColumn("campaign", slice("temp", start=1, length=2)) \
+        .agg(collect_list("attributes").alias("attributes_temp")) \
+        .withColumn("length", size(col("attributes_temp"))) \
         .withColumn("sessionId", df["sessionId"].cast(StringType())) \
         .select("userId",
-                "session_eventTypes",
                 "sessionId",
-                "temp")
+                "length",
+                "attributes_temp")\
+        .cache()
 
-    temp_df = work_df \
-        .withColumn("length", size(col("temp"))) \
-        .withColumn("campaign", slice("temp", start=1, length=2)) \
+    max_col_length = work_df.select("length").agg({"length": "max"}).collect()[0][0]
 
-    col_length = temp_df.select("length").distinct().collect()[0][0]
-
-    temp_df2 = temp_df.withColumn("channel_id", slice("temp", start=3, length=col_length))
-
-    result = temp_df2 \
+    return work_df \
+        .withColumn("campaign", slice("attributes_temp", start=1, length=2)) \
+        .withColumn("all_purchases", slice("attributes_temp", start=3, length=max_col_length)) \
         .select("userId",
-                "session_eventTypes",
                 "sessionId",
                 expr(convert_array_of_maps_to_map).alias("campaign"),
-                explode(temp_df2.channel_id).alias("purchases"))
-
-    return result
-
+                explode("all_purchases").alias("purchases"))
 
 def create_target_dataframe_from(df_1, df_2):
-    result = df_2 \
+    return df_2 \
         .join(df_1, df_2.purchaseId == df_1.purchases.purchase_id, "inner") \
         .select("purchaseId",
                 "purchaseTime",
@@ -125,8 +112,6 @@ def create_target_dataframe_from(df_1, df_2):
                 "sessionId",
                 col("campaign")["campaign_id"].alias("campaignId"),
                 col("campaign")["channel_id"].alias("channelIid"))
-
-    return result
 
 
 """ Task #1.2 - Implement target dataframe by using a custom UDF """
@@ -149,9 +134,9 @@ def generate_sessions_udf(event_type, generated_id):
 
 def create_target_dataframe_udf(mobile_app_data, purchase_data):
     w1 = Window.partitionBy('userId').orderBy('eventTime')
-    w2 = Window.orderBy('sessionId')
+    w2 = Window.partitionBy('sessionId')
 
-    temp_df = (mobile_app_data
+    result_df = (mobile_app_data
                .withColumn('sessionId_temp', generate_sessions_udf(mobile_app_data['eventType'], monotonically_increasing_id() + 1))
                .withColumn('sessionId', (sum(col('sessionId_temp')).over(w1)).cast(StringType()))
                .withColumn('attr', prepare_attributes_udf(mobile_app_data['eventType'], mobile_app_data['attributes']))
@@ -178,8 +163,8 @@ def create_target_dataframe_udf(mobile_app_data, purchase_data):
                .drop(*['attributes', 'sessionId_temp', 'attr', 'campaign_id', 'channel_id', 'eventId', 'eventTime'])
                )
 
-    result_df = temp_df \
-        .join(purchase_data, temp_df['purchase_id'] == purchase_data['purchaseId'], 'inner') \
+    return result_df \
+        .join(purchase_data, result_df['purchase_id'] == purchase_data['purchaseId'], 'inner') \
         .select(
             col('purchaseId'),
             col('purchaseTime'),
@@ -189,8 +174,6 @@ def create_target_dataframe_udf(mobile_app_data, purchase_data):
             col('campaignId'),
             col('channelIid')
         )
-
-    return result_df
 
 
 def main(spark: SparkContext, spark_logger: Log4j, spark_config):
@@ -207,11 +190,11 @@ def main(spark: SparkContext, spark_logger: Log4j, spark_config):
 
     """ default Spark SQL capabilities version """
 
-    structured_mobile_data = generate_structured_mobile_data(mobile_app_data)
+    structured_mobile_data = generate_structured_mobile_data(mobile_app_data).cache()
 
     result = generate_sessions(structured_mobile_data).cache()  # split data into unique sessions (session starts with app_open event and finishes with app_close)
 
-    aggr_data = aggregate_mobile_data(result).cache()
+    aggr_data = aggregate_mobile_data(result)
 
     target_dataframe = create_target_dataframe_from(aggr_data, purchases_structured_data)     # target dataframe
 

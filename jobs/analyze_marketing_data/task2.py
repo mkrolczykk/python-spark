@@ -36,7 +36,7 @@ MST_POPULAR_CHANNEL_OUTPUT = RESULT_FOLDER + "most_popular_channel.parquet"
 
 
 def calculate_campaigns_revenue(df):
-    result = df \
+    return df \
         .filter(df.isConfirmed == True) \
         .groupBy("campaignId") \
         .agg(collect_list(col("billingCost")).alias("billings")) \
@@ -45,29 +45,27 @@ def calculate_campaigns_revenue(df):
         .orderBy(col("revenue").desc()) \
         .limit(10)
 
-    return result
 
 def calculate_campaigns_revenue_sql(spark_context: SparkContext, sql_query=biggest_revenue_query):
     return spark_context.sql(sql_query)
+
 
 def channels_engagement_performance(df):
     w3 = Window \
         .partitionBy("campaignId") \
         .orderBy(col("count").desc())
 
-    result = df \
+    return df \
         .groupBy("campaignId", "channelIid") \
         .count() \
         .withColumn("row", row_number().over(w3)) \
         .filter(col("row") == 1).drop("row") \
         .withColumnRenamed("count", "unique_sessions")
 
-    return result
 
 def channels_engagement_performance_sql(spark_context: SparkContext, sql_query=most_popular_channel_query):
-    result = spark_context.sql(sql_query)
+    return spark_context.sql(sql_query)
 
-    return result
 
 def main(spark: SparkContext, spark_logger: Log4j, spark_config):
 

@@ -6,4 +6,4 @@ biggest_revenue_query = (""
                             "FROM target_dataframe "
                             "WHERE target_dataframe.isConfirmed == TRUE) "
                   "GROUP BY campaignId) "
-              "ORDER BY revenue DESC LIMIT 10").format()
+              "ORDER BY revenue DESC LIMIT 10")
