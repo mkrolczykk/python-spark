@@ -1,5 +1,4 @@
-# GridU Python Engineer to BigData Engineer
-Python Engineer to BigData Engineer capstone project 1
+# Big data python + spark project
 
 ## Table of contents
 - [Task content](#task-content)
@@ -16,14 +15,6 @@ You work at a data engineering department of a company building an ecommerce pla
 is used by customers to transact with its on-line store. Marketing department of the company has set up various campaigns
 (e.g. “Buy one thing and get another one as a gift”, etc.)  via different marketing channels (e.g. Google / Yandex / Facebook Ads,
 etc.).
-
-Now the business wants to know the efficiency of the campaigns and channels.
-
-Let’s help them out!
-
-### Dataset link:
-
-https://github.com/gridu/INTRO_SPARK-SCALA_FOR_STUDENTS <br />
 
 ###  Given datasets
 ####  Mobile App click stream projection
@@ -49,8 +40,6 @@ Events of app_open type may contain the attributes relevant to the marketing ana
 
 Events of purchase type contain purchase_id attribute.
 
-Data sample: https://docs.google.com/spreadsheets/d/1CpdAKLoy3mPa-W2EnTzDjCyBcWAdCYBiB7EoKoHUoOs/edit?usp=sharing
-
 ####  Purchases projection
 
 Schema:
@@ -58,8 +47,6 @@ Schema:
 * purchaseTime: Timestamp
 * billingCost: Double
 * isConfirmed: Boolean
-
-Data sample: https://docs.google.com/spreadsheets/d/1IEY8TE8Uv2Lv2yfPLYlzrq5VLmcui2tPljCWYyWAcRc/edit?usp=sharing
 
 ### Tasks & Requirements
 
@@ -183,9 +170,9 @@ The app should be ready to use.
 
 _completed_
 
+
 ## Contact
 
-Created by @mkrolczykG - feel free to contact me!
+Created by @mkrolczyk12 - feel free to contact me!
 
-- Slack: Marcin Krolczyk
-- E-mail: mkrolczyk@griddynamics.com
+- E-mail: m.krolczyk66@gmail.com
