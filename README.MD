@@ -119,7 +119,7 @@ Project consists of the following directories: <br />
 To run project, follow these steps: <br />
 1. Open terminal and clone the project from github repository:
 ```
-$ git clone https://github.com/mkrolczykG/python_engineer_to_bigData_engineer_capstone_project1.git
+$ git clone https://github.com/mkrolczyk12/python-spark.git
 ```
 ```
 $ cd <project_cloned_folder>
