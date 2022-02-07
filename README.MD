@@ -1,4 +1,4 @@
-# Big data python + spark project
+# Big data Python + Spark project
 
 ## Table of contents
 - [Task content](#task-content)
