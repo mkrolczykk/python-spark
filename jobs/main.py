@@ -1,10 +1,12 @@
-from dependencies.spark import start_spark
 import os
 from jobs.analyze_marketing_data import task1, task2
+from dependencies.spark import start_spark
+
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def main():
+    print("Starting application...")
     # start spark session
     spark, spark_logger, spark_config = start_spark(
         app_name='Capstone project 1',
